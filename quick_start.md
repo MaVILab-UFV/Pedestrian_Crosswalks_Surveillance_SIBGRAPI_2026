@@ -31,7 +31,7 @@ The pipeline depends on two external projects, [SAM 3D Objects](https://github.c
    git clone https://github.com/ByteDance-Seed/Depth-Anything-3.git
    cd Depth-Anything-3
    ```
-   Then follow the installation steps of its official [README](https://github.com/ByteDance-Seed/Depth-Anything-3#-installation). Install it in the same `sam3d-objects` environment, which already provides PyTorch, so the basic install (`pip install -e .`) is enough.
+   Then follow the installation steps of its official [setup](https://github.com/ByteDance-Seed/Depth-Anything-3#-installation). Install it in the same `sam3d-objects` environment, which already provides PyTorch, so the basic install (`pip install -e .`) is enough.
 
 5. **Install the Pipeline Requirements**
    Back at the repository root, with the `sam3d-objects` environment active:
