@@ -1,7 +1,5 @@
-# Dependências próprias dos pipelines (além de torch, SAM3D e DA3, que o
-# setup.sh instala). Versões do ambiente usado no artigo.
+# Requisitos próprios dos pipelines. Instale no mesmo ambiente do SAM 3D
+# Objects e do Depth-Anything-3, depois de instalar os dois.
 ultralytics==8.4.60
 pandas==2.3.3
-open3d==0.18.0
 decord==0.6.0
-huggingface-hub[cli]<1.0

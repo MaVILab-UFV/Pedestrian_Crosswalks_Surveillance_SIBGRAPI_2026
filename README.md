@@ -1,129 +1,64 @@
-# Detecção de infração na faixa de pedestres
+# Pedestrian Crosswalks Surveillance: Mitigating 2D Occlusions through Monocular 3D Reconstruction - SIBGRAPI 2026
+Official repository for **Pedestrian Crosswalks Surveillance: Mitigating 2D Occlusions through Monocular 3D Reconstruction** (SIBGRAPI 2026). A 3D pipeline that detects traffic violations at pedestrian crosswalks, flagging frames where a vehicle and a pedestrian occupy the crosswalk at the same time, from a single fixed monocular camera. The dataset used in the paper is available on [Zenodo](TODO).
 
-Pipelines que detectam quando um **automóvel e uma pessoa ocupam a faixa de
-pedestres ao mesmo tempo**, combinando detecção 2D (YOLO), profundidade
-monocular ([Depth-Anything-3](https://github.com/ByteDance-Seed/Depth-Anything-3))
-e reconstrução 3D do veículo ([SAM 3D Objects](https://github.com/facebookresearch/sam-3d-objects)).
-A faixa vira uma caixa orientada (OBB) em 3D, e a infração é testada pela
-interseção da mesh do veículo com essa caixa.
+<p align="center">
+  <img src="figs/metodologia_imagem.png" alt="Overview of the proposed methodology" />
+</p>
 
-## Estrutura
+The pipeline lifts the 2D scene to 3D and decides violations geometrically, in four stages:
 
-```
-src/
-  geometria.py                   # funções 3D (OBB da faixa, interseção mesh x OBB, ...)
-  pipeline_infracao.py           # versão original: 3D sobre JSONs de detecção já existentes
-  pipeline_infracao_v2.py        # YOLO próprio + fluxos 2D/3D + cache em disco
-  pipeline_infracao_vtempo2.py   # v2 + medição de tempo por etapa + fluxos extras
-data/
-  video/          # vídeos de entrada (MVI_xxxx.mov, .mp4, ...)
-  calib/          # pontos da faixa por vídeo (MVI_xxxx_pontos_faixa.npy)
-  output_naive/   # JSONs de detecção 2D (só para pipeline_infracao.py)
-patches/
-  sam3d-cu128.patch   # ajustes de versão do SAM3D para CUDA 12.8
-setup.sh, environment.yml, requirements.txt
-third_party/      # criada pelo setup.sh (DA3 e SAM3D; fora do git)
-dados/            # criada na execução (cache e saídas; fora do git)
-```
+1. **2D Detection and Co-occurrence Filtering:** YOLO detects pedestrians, cyclists and vehicles in every frame and keeps only the detections that touch the crosswalk polygon. A co-occurrence filter then selects only the visually ambiguous frames, where a vehicle and a vulnerable road user appear on the crosswalk together and the 2D image alone cannot tell whether the vehicle actually invades it. Only these frames proceed to the 3D stages.
+2. **Monocular Depth and Crosswalk Volume:** [Depth-Anything-3](https://github.com/ByteDance-Seed/Depth-Anything-3) estimates depth and camera intrinsics for each selected frame. The crosswalk corner points are back-projected to 3D, and an oriented bounding box (OBB) is fitted to them to define the enforcement volume above the ground.
+3. **3D Vehicle Reconstruction:** YOLO segmentation provides the vehicle mask, and [SAM 3D Objects](https://github.com/facebookresearch/sam-3d-objects) reconstructs the vehicle as a 3D mesh.
+4. **3D Violation Test:** a frame is flagged as a violation when the vehicle mesh intersects the crosswalk OBB and a pedestrian is present inside it.
 
-## Requisitos
+<p align="center">
+  <img src="figs/resultados_imagem.png" alt="Qualitative results" />
+</p>
 
-- Linux x86-64 com GPU NVIDIA. O SAM3D pede pelo menos 32 GB de VRAM.
-- `git` e `conda` (ou `mamba`).
-- Acesso aprovado aos checkpoints do SAM3D em
-  <https://huggingface.co/facebook/sam-3d-objects>, e login com `hf auth login`.
+If you find this work useful for your research, please cite our paper:
 
-## Instalação
-
-### Automática
-
-```bash
-git clone <url-deste-repositorio>
-cd <pasta-do-repositorio>
-./setup.sh
+```bibtex
+@inproceedings{alves2026,
+  author = {
+    Sarah Alves and
+    Júlia Matos and
+    Caio Cândido and
+    Thiago Gomes and
+    Michel Silva
+  },
+  title = {Pedestrian Crosswalks Surveillance: Mitigating 2D Occlusions through Monocular 3D Reconstruction},
+  booktitle = {2026 39th SIBGRAPI Conference on Graphics, Patterns and Images (SIBGRAPI)},
+  year = {2026},
+  volume={},
+  number={},
+  doi={}
+}
 ```
 
-O `setup.sh`:
+## Contact
 
-1. clona o Depth-Anything-3 e o sam-3d-objects dos repositórios originais em
-   `third_party/`, fixados nos commits usados no trabalho;
-2. aplica `patches/sam3d-cu128.patch` no SAM3D;
-3. cria o ambiente conda `infracao-faixa` e instala torch 2.7.0 (cu128), SAM3D,
-   DA3 e `requirements.txt`;
-4. baixa os checkpoints do SAM3D em `third_party/sam-3d-objects/checkpoints/hf/`.
+### Authors
 
-Variáveis opcionais: `ENV_NAME=<nome>` muda o nome do ambiente,
-`PULAR_ENV=1` só clona e aplica o patch, e `PULAR_CHECKPOINTS=1` não baixa os
-checkpoints.
+| Sarah Alves* | Júlia Matos* | Caio Cândido | Thiago Gomes | Michel Silva |
+|---|---|---|---|---|
+| MSc. Student¹ | BSc. Student¹ | BSc. Student¹ | Assistant Professor¹ | Assistant Professor¹ |
+| sarah.c.alves@ufv.br | julia.galvao@ufv.br  | caio.candido@ufv.br | thiago.luange@ufv.br | michel.m.silva@ufv.br |
 
-### Manual
+\*Equal contribution.
 
-Se preferir instalar por conta própria, os pipelines só esperam encontrar os
-dois repositórios nestes caminhos:
+¹Universidade Federal de Viçosa
+Department of Informatics
+Viçosa, Minas Gerais, Brazil
 
-```bash
-mkdir -p third_party && cd third_party
+## Laboratory
 
-git clone https://github.com/ByteDance-Seed/Depth-Anything-3.git
-git -C Depth-Anything-3 checkout 41736238f5bced4debf3f2a12375d2466874866d
+**MaVILab: Machine Vision and Intelligence Laboratory**
+https://mavilab-ufv.github.io/
 
-git clone https://github.com/facebookresearch/sam-3d-objects.git
-git -C sam-3d-objects checkout 81a82373a3a7f4cbb00bd5b32aaf6b4d0f659ddd
-git -C sam-3d-objects apply ../../patches/sam3d-cu128.patch
-```
+## Acknowledgements
 
-Depois, instale o SAM3D seguindo o
-[doc/setup.md](https://github.com/facebookresearch/sam-3d-objects/blob/main/doc/setup.md)
-dele (incluindo os checkpoints em `checkpoints/hf/`), o DA3 com
-`pip install -e third_party/Depth-Anything-3` e, por fim,
-`pip install -r requirements.txt`.
+We would like to thank CAPES, FAPEMIG, CNPq, PIBIC-UFV/CNPq, and BICJr-UFV/FAPEMIG for funding differnt parts of this work; and our annotators, Beatriz Gomes, Iasmin da Silva, Leonardo Firmino, Lucas Hermenegildo, Maria Eduarda Bhering, and Sofia de Paula.
 
-### Pesos baixados automaticamente
-
-- **DA3** (`depth-anything/DA3-LARGE-1.1`): baixado do Hugging Face na primeira
-  execução, para `~/.cache/huggingface/hub/` (ou `$HF_HOME`).
-- **YOLO** (`yolo11l.pt`, `yolo11x-seg.pt`): baixados pelo Ultralytics na
-  primeira execução, na pasta de onde o script for chamado.
-
-## Dados de entrada
-
-| Pasta | Conteúdo | Usado por |
-|---|---|---|
-| `data/video/` | vídeos (`.mov`, `.mp4`, `.avi`, `.mkv`, `.m4v`) | todos |
-| `data/calib/` | `<video>_pontos_faixa.npy`: pontos (u, v) em pixels que delimitam a faixa, em ordem ao redor do contorno | todos |
-| `data/output_naive/` | JSONs de detecção 2D com prefixo `<video>_` (subpastas por modelo) | só `pipeline_infracao.py` |
-
-Os arquivos são associados pelo nome-base do vídeo: `MVI_7693.mov` usa
-`MVI_7693_pontos_faixa.npy` e `MVI_7693_*.json`.
-
-## Execução
-
-Com o ambiente ativo (`conda activate infracao-faixa`), a partir de qualquer pasta:
-
-```bash
-python src/pipeline_infracao_vtempo2.py
-```
-
-Os parâmetros ficam na classe `CFG`, no topo de cada script. O principal é
-`CFG.FLUXO`, nos pipelines `v2` e `vtempo2`:
-
-| Fluxo | O que faz | `v2` | `vtempo2` |
-|---|---|:-:|:-:|
-| `2d` | YOLO bbox + interseção 2D com a faixa | ✓ | ✓ |
-| `2d_coocorrencia` | igual ao `2d`, só nos frames com automóvel e pessoa | ✓ | ✓ |
-| `completo` | pipeline 3D: YOLO, DA3, OBB (PCA), YOLO-seg, SAM3D e interseção 3D | ✓ | ✓ |
-| `nuvem_mascara` | como o `completo`, mas sem SAM3D: usa a nuvem de pontos sob a máscara do veículo | | ✓ |
-| `pontos` | como o `completo`, com a OBB montada direto dos pontos da faixa | | ⚠ |
-
-⚠ O fluxo `pontos` chama `geometria.construir_obb_faixa_pontos`, que ainda não
-está em `src/geometria.py`.
-
-## Saídas
-
-- **`pipeline_infracao.py`**: um `<json>_infracoes_3d.json` ao lado de cada JSON
-  de entrada em `data/output_naive/`.
-- **`v2` e `vtempo2`**: tudo em `dados/<video>/`. O cache de cada etapa fica em
-  `yolo_bb/`, `co_ocorrencia/`, `da3/`, `obb_faixa/`, `yolo_seg/` e `sam3d/`, e o
-  resultado final em `infracoes/` ou `interseccao_2d/`.
-- **`vtempo2`**, além disso: `tempos_execucao.csv` (tempo de cada etapa por
-  frame) e `tempos_execucao_resumo.csv` (tabela frame × etapa com o total).
+## Quick Start
+For instructions on how to get started with Pedestrian Crosswalks Surveillance, see the [Quick Start Guide](quick_start.md).

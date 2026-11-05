@@ -1,5 +1,6 @@
-# repositórios de terceiros (clonados pelo setup.sh)
-third_party/
+# Depth-Anything-3 e SAM 3D Objects (clonados pelo usuário)
+third_party/*
+!third_party/.gitkeep
 
 # cache e saídas dos pipelines
 dados/
