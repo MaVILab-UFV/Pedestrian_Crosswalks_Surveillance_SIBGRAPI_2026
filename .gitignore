@@ -1,0 +1,22 @@
+# repositórios de terceiros (clonados pelo setup.sh)
+third_party/
+
+# cache e saídas dos pipelines
+dados/
+
+# dados de entrada (vídeos, calibração e JSONs ficam fora do git)
+data/video/*
+data/calib/*
+data/output_naive/*
+!data/*/.gitkeep
+
+# pesos de modelos (baixados automaticamente)
+*.pt
+*.safetensors
+*.ckpt
+
+# Python / sistema
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store

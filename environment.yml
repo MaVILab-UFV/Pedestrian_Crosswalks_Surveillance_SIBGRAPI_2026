@@ -1,0 +1,14 @@
+# Ambiente base (conda). Torch, SAM3D, DA3 e o restante são instalados via pip
+# pelo setup.sh. Versões tiradas do ambiente usado no artigo (Python 3.11,
+# CUDA 12.8, GCC 13).
+name: infracao-faixa
+channels:
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - nvidia::cuda-nvcc=12.8
+  - nvidia::cuda-libraries-dev=12.8
+  - gcc_linux-64=13
+  - gxx_linux-64=13
